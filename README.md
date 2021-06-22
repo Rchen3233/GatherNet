@@ -1,4 +1,4 @@
-# A Lightest CNN Network Architecture
+# A Lightest CNN Network Architecture (vs ShuffleNet_v1_v2 / MobileNet_v1_v2_v3 / GhostNet on the CIFAR10 dataset)
 
 I'm playing with [PyTorch](http://pytorch.org/) on the CIFAR10 dataset.
 
