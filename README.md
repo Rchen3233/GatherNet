@@ -1,35 +1,47 @@
-# Train CIFAR10 with PyTorch
+# A Lightest CNN Network Architecture
 
 I'm playing with [PyTorch](http://pytorch.org/) on the CIFAR10 dataset.
 
 ## Prerequisites
 - Python 3.6+
 - PyTorch 1.0+
+- thop
+- tensorboardX
 
 ## Training
 ```
 # Start training with: 
-python main.py
+python train.py
 
-# You can manually resume the training with: 
-python main.py --resume --lr=0.01
+# Start testing with: 
+python test.py
 ```
 
+## Experimental setting：
+```
+Epoch = 200  
+Batchsize = 128  
+Learning rate = 0.1  
+momentum = 0.9  
+weight_decay = 4e-5
+```
+
+## Loss and error curves：
+```
+
+```
+
+
 ## Accuracy
-| Model             | Acc.        |
-| ----------------- | ----------- |
-| [VGG16](https://arxiv.org/abs/1409.1556)              | 92.64%      |
-| [ResNet18](https://arxiv.org/abs/1512.03385)          | 93.02%      |
-| [ResNet50](https://arxiv.org/abs/1512.03385)          | 93.62%      |
-| [ResNet101](https://arxiv.org/abs/1512.03385)         | 93.75%      |
-| [RegNetX_200MF](https://arxiv.org/abs/2003.13678)     | 94.24%      |
-| [RegNetY_400MF](https://arxiv.org/abs/2003.13678)     | 94.29%      |
-| [MobileNetV2](https://arxiv.org/abs/1801.04381)       | 94.43%      |
-| [ResNeXt29(32x4d)](https://arxiv.org/abs/1611.05431)  | 94.73%      |
-| [ResNeXt29(2x64d)](https://arxiv.org/abs/1611.05431)  | 94.82%      |
-| [SimpleDLA](https://arxiv.org/abs/1707.064)           | 94.89%      |
-| [DenseNet121](https://arxiv.org/abs/1608.06993)       | 95.04%      |
-| [PreActResNet18](https://arxiv.org/abs/1603.05027)    | 95.11%      |
-| [DPN92](https://arxiv.org/abs/1707.01629)             | 95.16%      |
-| [DLA](https://arxiv.org/abs/1707.064)                 | 95.47%      |
+| Model          |       | Params(M) | FLOPs(M)  | Acc(%) |
+| -------------- | ---   | -------   | ----      | ----   |
+| ShuffleNet V1  | G=2   |  2.05     | 90.34     | 90.28  |
+| ShuffleNet V2  | 1.0x  |  1.26     | 46.13     | 92.25  |
+| MobileNet V1   | 1.0x  |  3.22     | 178.06    | 93.15  |
+| MobileNet V2   | 1.0x  |  2.30     | 94.60     | 93.90  |
+| MobileNet V3   | Small |  1.68     | 18.49     | 91.64  |
+| MobileNet V3   | Large |  4.21     | 68.67     | 94.03  |
+| GhostNet       | R=3   |  3.63     | 35.20     | 91.13  |
+| GatherNet      | 1.0x  |  0.24     | 21.01     | 90.60  |
+
 

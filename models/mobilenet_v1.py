@@ -1,110 +1,62 @@
+'''MobileNet in PyTorch.
+
+See the paper "MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications"
+for more details.
+'''
 import torch
 import torch.nn as nn
-import torch.nn.init as init
+import torch.nn.functional as F
 
 
-def weights_init(net, init_type='normal', init_gain=0.02):
-    """Initialize network weights.
-    Parameters:
-        net (network)       -- network to be initialized
-        init_type (str)     -- the name of an initialization method: normal | xavier | kaiming | orthogonal
-        init_gain (float)    -- scaling factor for normal, xavier and orthogonal.
-    """
-
-    def init_func(m):
-        classname = m.__class__.__name__
-        if hasattr(m, 'weight') and classname.find('Conv') != -1:
-            if init_type == 'normal':
-                init.normal_(m.weight.data, 0.0, init_gain)
-            elif init_type == 'xavier':
-                init.xavier_normal_(m.weight.data, gain=init_gain)
-            elif init_type == 'kaiming':
-                init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
-            elif init_type == 'orthogonal':
-                init.orthogonal_(m.weight.data, gain=init_gain)
-            else:
-                raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
-        elif classname.find('BatchNorm2d') != -1:
-            init.normal_(m.weight.data, 1.0, 0.02)
-            init.constant_(m.bias.data, 0.0)
-        elif classname.find('Linear') != -1:
-            init.normal_(m.weight, 0, 0.01)
-            init.constant_(m.bias, 0)
-
-    # Apply the initialization function <init_func>
-    print('Initialize network with %s type' % init_type)
-    net.apply(init_func)
-
-
-###========================== MobileNetv1 framework ==========================
-class DWConv(nn.Module):
-    def __init__(self, in_channels, out_channels, stride):
-        super(DWConv, self).__init__()
-        self.conv = nn.Sequential(
-            # dw
-            nn.Conv2d(in_channels, in_channels, 3, stride, 1, groups=in_channels, bias=False),
-            nn.BatchNorm2d(in_channels),
-            nn.ReLU(inplace=True),
-            # pw
-            nn.Conv2d(in_channels, out_channels, 1, 1, 0, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
-        )
+class Block(nn.Module):
+    '''Depthwise conv + Pointwise conv'''
+    def __init__(self, in_planes, out_planes, stride=1):
+        super(Block, self).__init__()
+        self.conv1 = nn.Conv2d(in_planes, in_planes, kernel_size=3, stride=stride, padding=1, groups=in_planes, bias=False)
+        self.bn1 = nn.BatchNorm2d(in_planes)
+        self.conv2 = nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_planes)
 
     def forward(self, x):
-        return self.conv(x)
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn2(self.conv2(out)))
+        return out
 
 
-class MobileNetV1(nn.Module):
-    def __init__(self, n_class=2):
-        super(MobileNetV1, self).__init__()
-        # Start Conv
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 32, 3, 2, 1, bias=False),
-            nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True)
-        )
-        # DWConv blocks
-        self.conv2 = DWConv(32, 64, 1)
-        self.conv3 = DWConv(64, 128, 2)
-        self.conv4 = DWConv(128, 128, 1)
-        self.conv5 = DWConv(128, 256, 2)
-        self.conv6 = DWConv(256, 256, 1)
-        self.conv7 = DWConv(256, 512, 2)
-        self.conv8 = DWConv(512, 512, 1)
-        self.conv9 = DWConv(512, 512, 1)
-        self.conv10 = DWConv(512, 512, 1)
-        self.conv11 = DWConv(512, 512, 1)
-        self.conv12 = DWConv(512, 512, 1)
-        self.conv13 = DWConv(512, 1024, 2)
-        self.conv14 = DWConv(1024, 1024, 1)
-        # Classifier
-        self.classifier = nn.Linear(1024, n_class)
+class MobileNet(nn.Module):
+    # (128,2) means conv planes=128, conv stride=2, by default conv stride=1
+    cfg = [64, (128,1), 128, (256,2), 256, (512,2), 512, 512, 512, 512, 512, (1024,2), 1024]
+
+    def __init__(self, num_classes=10):
+        super(MobileNet, self).__init__()
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.layers = self._make_layers(in_planes=32)
+        self.linear = nn.Linear(1024, num_classes)
+
+    def _make_layers(self, in_planes):
+        layers = []
+        for x in self.cfg:
+            out_planes = x if isinstance(x, int) else x[0]
+            stride = 1 if isinstance(x, int) else x[1]
+            layers.append(Block(in_planes, out_planes, stride))
+            in_planes = out_planes
+        return nn.Sequential(*layers)
 
     def forward(self, x):
-        # feature extraction
-        x = self.conv1(x)  # out: B * 32 * 112 * 112
-        x = self.conv2(x)  # out: B * 64 * 112 * 112
-        x = self.conv3(x)  # out: B * 128 * 56 * 56
-        x = self.conv4(x)  # out: B * 128 * 56 * 56
-        x = self.conv5(x)  # out: B * 256 * 28 * 28
-        x = self.conv6(x)  # out: B * 256 * 28 * 28
-        x = self.conv7(x)  # out: B * 512 * 14 * 14
-        x = self.conv8(x)  # out: B * 512 * 14 * 14
-        x = self.conv9(x)  # out: B * 512 * 14 * 14
-        x = self.conv10(x)  # out: B * 512 * 14 * 14
-        x = self.conv11(x)  # out: B * 512 * 14 * 14
-        x = self.conv12(x)  # out: B * 512 * 14 * 14
-        x = self.conv13(x)  # out: B * 1024 * 7 * 7
-        x = self.conv14(x)  # out: B * 1024 * 7 * 7
-        # classifier
-        x = x.mean(3).mean(2)  # out: B * 1024 (global avg pooling)
-        x = self.classifier(x)  # out: B * 1000
-        return x
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layers(out)
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        out = self.linear(out)
+        return out
 
 
-if __name__ == "__main__":
-    net = MobileNetV1()
-    a = torch.randn(1, 3, 224, 224)
-    b = net(a)
-    print(b.shape)
+def test():
+    net = MobileNet()
+    x = torch.randn(1,3,32,32)
+    y = net(x)
+    print(y.size())
+    print(net)
+
+#test()
