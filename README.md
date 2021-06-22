@@ -28,6 +28,7 @@ weight_decay = 4e-5
 
 ## Loss and error curves：
 ```
+![image](https://user-images.githubusercontent.com/86100729/122910711-19194980-d389-11eb-9d2c-06ec3a6f3ccb.png)
 
 ```
 
