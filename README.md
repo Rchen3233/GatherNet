@@ -28,7 +28,7 @@ weight_decay = 4e-5
 
 ## Loss and error curves：
 
-[](data/loss.png)
+![](data/loss.png)
 
 
 
