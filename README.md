@@ -1,6 +1,6 @@
 # A Lightest CNN Network Architecture
 
-I'm playing with [PyTorch](http://pytorch.org/) on the CIFAR10 dataset.
+I'm playing with [PyTorch](http://pytorch.org/) on the CIFAR10 dataset and ocular surface disease dataset (OSD dataset).
 
 ## Prerequisites
 - Python 3.6+
