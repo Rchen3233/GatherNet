@@ -1,0 +1,7 @@
+Ocular surface disease images dataset (OSD dataset).
+Including 467 normal and 486 abnormal images showing 12 types of ocular surface diseases.
+trainset:testset=7:3 (667:286)
+Use this OSD dataset, please cite the article: 
+[1]Chen R,Zeng W,Fan W,et al.Automatic Recognition of Ocular Surface Diseases on Smartphone Images 
+Using Densely Connected Convolutional Networks[C].2021 43rd Annual International Conference of the 
+IEEE Engineering in Medicine & Biology Society (EMBC).IEEE,2021:2786-2789.
